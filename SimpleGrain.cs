@@ -12,16 +12,26 @@ namespace HelloWorld;
 [MayInterleave(nameof(ArgHasInterleaveAttribute))]
 public class SimpleGrain : Grain, ISimpleGrain
 {
+    bool interleavedOnce = false;
 
     public static bool ArgHasInterleaveAttribute(IInvokable req)
     {
-        Console.WriteLine("May interleave call.");
-        return true;
+        if (RequestContext.Get("MayInterleave") is bool mayInterleave && mayInterleave)
+        {
+            return mayInterleave;
+        }
+        return false;
     }
 
-    public Task Tell()
+    public async Task Tell()
     {
-        Console.WriteLine("Grain method call.");
-        return Task.CompletedTask;
+        if (!interleavedOnce) {
+            Console.WriteLine("Called without interleaving.");
+            RequestContext.Set("MayInterleave", true);
+            interleavedOnce = true;
+            await GrainFactory.GetGrain<ISimpleGrain>(this.GetPrimaryKeyString()).Tell();
+        }
+        Console.WriteLine("Called with interleaving.");
+        return;
     }
 }

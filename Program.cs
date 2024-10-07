@@ -17,6 +17,7 @@ await host.StartAsync();
 
 var grainFactory = host.Services.GetRequiredService<IGrainFactory>();
 var test1Grain1 = grainFactory.GetGrain<ISimpleGrain>("1");
+
 await test1Grain1.Tell();
 
 await host.StopAsync();
